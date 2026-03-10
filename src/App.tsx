@@ -305,7 +305,7 @@ function SpinePreview({
         backgroundAlpha: 0,
         sharedTicker: false,
         width: Math.max(host.clientWidth, 320),
-        height: Math.max(host.clientHeight, 520),
+        height: Math.max(host.clientHeight, 320),
         resolution: Math.min(window.devicePixelRatio || 1, 2),
       });
 
@@ -333,7 +333,7 @@ function SpinePreview({
           return;
         }
 
-        appRef.current.renderer.resize(Math.max(hostRef.current.clientWidth, 320), Math.max(hostRef.current.clientHeight, 520));
+        appRef.current.renderer.resize(Math.max(hostRef.current.clientWidth, 320), Math.max(hostRef.current.clientHeight, 320));
         layoutPreview();
         appRef.current.renderer.render(appRef.current.stage);
       };
@@ -454,7 +454,7 @@ function SpinePreview({
     }
   }, [animationName, asset, isLooping, layoutPreview, restartToken]);
 
-  return <div ref={hostRef} className="h-full min-h-[520px] w-full" />;
+  return <div ref={hostRef} className="h-full min-h-0 w-full" />;
 }
 
 type ErrorBoundaryState = {
@@ -726,294 +726,253 @@ function SpineStudioApp() {
   const progressPercent = Math.round(exportProgress * 100);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <div className="mx-auto max-w-[1600px] px-4 py-4 sm:px-6 sm:py-6">
-        <div className="grid gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
-          <aside className="border border-white/10 bg-slate-900">
-            <div className="border-b border-white/10 px-5 py-4">
-              <p className="text-xs uppercase tracking-[0.28em] text-cyan-200">Local Spine Viewer</p>
-              <h1 className="mt-2 text-2xl font-semibold tracking-tight">Spine Player + PNG Export</h1>
-              <p className="mt-2 text-sm leading-6 text-slate-400">Слева вся работа с файлами и анимацией. Справа только большое окно превью.</p>
-            </div>
+    <div className="min-h-screen bg-slate-950 text-white lg:h-screen lg:overflow-hidden">
+      <div className="mx-auto grid h-full max-w-[1800px] gap-4 p-4 lg:grid-cols-[300px_minmax(0,1fr)_320px]">
+        <aside className="border border-white/10 bg-slate-900">
+          <div className="border-b border-white/10 px-4 py-4">
+            <h1 className="text-xl font-semibold tracking-tight">Spine Player + PNG Export</h1>
+          </div>
 
-            <div className="space-y-0">
-              <section className="border-b border-white/10 px-5 py-4">
-                <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-sm font-medium text-white">Загрузка файлов</h2>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={triggerFileDialog}
-                      className="border border-cyan-300/40 px-3 py-2 text-sm text-cyan-100 transition hover:bg-cyan-300/10"
-                    >
-                      Выбрать
-                    </button>
-                    <button
-                      type="button"
-                      onClick={clearSession}
-                      className="border border-white/15 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10"
-                    >
-                      Очистить
-                    </button>
-                  </div>
-                </div>
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept=".atlas,.txt,.json,.png,.webp"
-                  className="hidden"
-                  onChange={(event) => {
-                    if (event.target.files) {
-                      void handleFiles(event.target.files);
-                    }
-                    event.target.value = "";
-                  }}
-                />
-
+          <section className="border-b border-white/10 px-4 py-4">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-medium">Загрузка ассетов</h2>
+              <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={triggerFileDialog}
-                  onDragOver={(event) => {
-                    event.preventDefault();
-                    setDragActive(true);
-                  }}
-                  onDragLeave={() => setDragActive(false)}
-                  onDrop={(event) => {
-                    event.preventDefault();
-                    setDragActive(false);
-                    void handleFiles(event.dataTransfer.files);
-                  }}
-                  className={`mt-4 block w-full border border-dashed px-4 py-6 text-left transition ${
-                    dragActive ? "border-cyan-300 bg-cyan-300/10" : "border-white/15 bg-slate-950 hover:border-white/30"
-                  }`}
+                  className="border border-cyan-300/40 px-3 py-1.5 text-sm text-cyan-100 transition hover:bg-cyan-300/10"
                 >
-                  <p className="text-sm font-medium text-white">Загрузите atlas, json и текстуры</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-400">Подходят файлы: .atlas или .txt, .json, .png, .webp.</p>
+                  Выбрать
                 </button>
-              </section>
-
-              <section className="border-b border-white/10 px-5 py-4">
-                <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-sm font-medium text-white">Краткая инфо</h2>
-                  <span className="text-xs uppercase tracking-[0.22em] text-slate-500">{loadState}</span>
-                </div>
-
-                {asset ? (
-                  <div className="mt-4 space-y-2 text-sm text-slate-300">
-                    <p>
-                      Runtime: <span className="text-white">{formatRuntimeLabel(asset.runtimeKey)}</span>
-                    </p>
-                    <p>
-                      Версия JSON: <span className="text-white">{asset.detectedVersion}</span>
-                    </p>
-                    <p>
-                      Анимаций: <span className="text-white">{asset.animations.length}</span>
-                    </p>
-                    <p>
-                      Текстур: <span className="text-white">{asset.imageFiles.length}</span>
-                    </p>
-                  </div>
-                ) : (
-                  <p className="mt-4 text-sm leading-6 text-slate-400">После загрузки здесь появится короткая информация о файлах и версии Spine.</p>
-                )}
-
-                {warnings.length > 0 && (
-                  <div className="mt-4 border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-100">
-                    {warnings.map((warning) => (
-                      <p key={warning}>{warning}</p>
-                    ))}
-                  </div>
-                )}
-
-                {errorMessage && (
-                  <div className="mt-4 border border-rose-400/30 bg-rose-400/10 p-3 text-sm text-rose-100">{errorMessage}</div>
-                )}
-
-                {previewError && (
-                  <div className="mt-4 border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-100">Ошибка превью: {previewError}</div>
-                )}
-              </section>
-
-              <section className="border-b border-white/10 px-5 py-4">
-                <h2 className="text-sm font-medium text-white">Воспроизведение и масштаб</h2>
-
-                <div className="mt-4 flex gap-2">
-                  <button
-                    type="button"
-                    disabled={!asset || !selectedAnimation || isExporting}
-                    onClick={handlePlay}
-                    className="border border-white/15 bg-white px-4 py-2 text-sm font-medium text-slate-950 disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-slate-500"
-                  >
-                    Play
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!asset || !selectedAnimation || isExporting}
-                    onClick={handleStop}
-                    className="border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    Stop
-                  </button>
-                </div>
-
-                <label className="mt-4 flex items-center gap-3 text-sm text-slate-300">
-                  <input
-                    type="checkbox"
-                    checked={isLooping}
-                    disabled={!asset || isExporting}
-                    onChange={(event) => {
-                      setIsLooping(event.target.checked);
-                      setRestartToken((value) => value + 1);
-                      setCurrentTime(0);
-                    }}
-                    className="h-4 w-4 rounded border-white/20 bg-transparent"
-                  />
-                  Loop
-                </label>
-
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between text-sm text-slate-300">
-                    <span>Скорость</span>
-                    <span className="text-white">{formatSpeedLabel(playbackSpeed)}</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0.1}
-                    max={3}
-                    step={0.05}
-                    value={playbackSpeed}
-                    disabled={!asset || isExporting}
-                    onChange={(event) => setPlaybackSpeed(clampSpeed(Number(event.target.value)))}
-                    className="w-full accent-cyan-300"
-                  />
-                </div>
-
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between text-sm text-slate-300">
-                    <span>Масштаб в превью</span>
-                    <span className="text-white">{formatZoomLabel(previewZoom)}</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0.2}
-                    max={3}
-                    step={0.05}
-                    value={previewZoom}
-                    disabled={!asset || isExporting}
-                    onChange={(event) => setPreviewZoom(clampZoom(Number(event.target.value)))}
-                    className="w-full accent-cyan-300"
-                  />
-                </div>
-
-                <div className="mt-4 text-sm text-slate-300">
-                  <p>
-                    Время: <span className="text-white">{formatDuration(currentTime)}</span> / <span className="text-white">{formatDuration(animationDuration)}</span>
-                  </p>
-                </div>
-              </section>
-
-              <section className="border-b border-white/10 px-5 py-4">
-                <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-sm font-medium text-white">Список анимаций</h2>
-                  <span className="text-xs text-slate-500">{asset?.animations.length ?? 0}</span>
-                </div>
-
-                <div className="mt-4 max-h-[320px] overflow-auto border border-white/10 bg-slate-950">
-                  {asset?.animations.map((animation) => (
-                    <button
-                      key={animation.name}
-                      type="button"
-                      onClick={() => {
-                        setSelectedAnimation(animation.name);
-                        setCurrentTime(0);
-                        setIsPlaying(true);
-                        setRestartToken((value) => value + 1);
-                      }}
-                      className={`flex w-full items-center justify-between border-b border-white/10 px-3 py-2 text-left text-sm transition last:border-b-0 ${
-                        selectedAnimation === animation.name ? "bg-cyan-300/10 text-white" : "text-slate-300 hover:bg-white/5"
-                      }`}
-                    >
-                      <span className="truncate pr-4">{animation.name}</span>
-                      <span className="text-xs text-slate-500">{formatDuration(animation.duration)}</span>
-                    </button>
-                  ))}
-
-                  {!asset && <p className="px-3 py-3 text-sm leading-6 text-slate-400">Сначала загрузите файлы.</p>}
-                </div>
-              </section>
-
-              <section className="px-5 py-4">
-                <h2 className="text-sm font-medium text-white">Экспорт PNG</h2>
-
-                <label className="mt-4 block text-sm text-slate-300">
-                  <span>FPS</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={60}
-                    value={exportFps}
-                    disabled={!asset || isExporting}
-                    onChange={(event) => setExportFps(clampFps(Number(event.target.value)))}
-                    className="mt-2 w-full border border-white/10 bg-slate-950 px-3 py-2 text-white outline-none focus:border-cyan-300/50"
-                  />
-                </label>
-
                 <button
                   type="button"
-                  disabled={!asset || !selectedAnimation || isExporting}
-                  onClick={() => void onExportFrames()}
-                  className="mt-4 w-full border border-cyan-300/30 bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:bg-cyan-300/30 disabled:text-slate-600"
+                  onClick={clearSession}
+                  className="border border-white/15 px-3 py-1.5 text-sm text-slate-200 transition hover:bg-white/10"
                 >
-                  {isExporting ? `Экспорт ${progressPercent}%` : "Экспортировать PNG sequence"}
+                  Очистить
                 </button>
-
-                <div className="mt-3 h-2 bg-white/10">
-                  <div className="h-2 bg-cyan-300 transition-[width] duration-200" style={{ width: `${progressPercent}%` }} />
-                </div>
-
-                <p className="mt-3 text-sm leading-6 text-slate-400">На выходе будет ZIP-архив с отдельными PNG-кадрами и прозрачным фоном.</p>
-              </section>
-            </div>
-          </aside>
-
-          <main className="border border-white/10 bg-slate-900">
-            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Превью</p>
-                <p className="mt-1 text-sm text-slate-300">
-                  {selectedAnimation ? `${selectedAnimation} · ${formatDuration(animationDuration)}` : "Пока ничего не загружено"}
-                </p>
-              </div>
-              <div className="text-right text-xs text-slate-500">
-                <p>Фон прозрачный</p>
-                <p className="mt-1">Масштаб: {formatZoomLabel(previewZoom)}</p>
               </div>
             </div>
 
-            <div className="h-[70vh] min-h-[520px] bg-[linear-gradient(45deg,rgba(255,255,255,0.04)_25%,transparent_25%,transparent_75%,rgba(255,255,255,0.04)_75%,rgba(255,255,255,0.04)),linear-gradient(45deg,rgba(255,255,255,0.04)_25%,transparent_25%,transparent_75%,rgba(255,255,255,0.04)_75%,rgba(255,255,255,0.04))] bg-[length:32px_32px] bg-[position:0_0,16px_16px] lg:h-[calc(100vh-3rem)] lg:min-h-[760px]">
-              {asset ? (
-                <SpinePreview
-                  asset={asset}
-                  animationName={selectedAnimation}
-                  isLooping={isLooping}
-                  isPlaying={isPlaying && !isExporting}
-                  playbackSpeed={playbackSpeed}
-                  zoom={previewZoom}
-                  restartToken={restartToken}
-                  onTimeChange={setCurrentTime}
-                  onPlaybackFinished={handlePreviewFinished}
-                  onError={handlePreviewError}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".atlas,.txt,.json,.png,.webp"
+              className="hidden"
+              onChange={(event) => {
+                if (event.target.files) {
+                  void handleFiles(event.target.files);
+                }
+                event.target.value = "";
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={triggerFileDialog}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setDragActive(true);
+              }}
+              onDragLeave={() => setDragActive(false)}
+              onDrop={(event) => {
+                event.preventDefault();
+                setDragActive(false);
+                void handleFiles(event.dataTransfer.files);
+              }}
+              className={`mt-3 block w-full border border-dashed px-3 py-4 text-left text-sm transition ${
+                dragActive ? "border-cyan-300 bg-cyan-300/10" : "border-white/15 bg-slate-950 hover:border-white/30"
+              }`}
+            >
+              atlas/txt + json + png/webp
+            </button>
+          </section>
+
+          <section className="px-4 py-4 text-sm text-slate-300">
+            <div className="flex items-center justify-between">
+              <h2 className="font-medium text-white">Инфо</h2>
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">{loadState}</span>
+            </div>
+
+            {asset ? (
+              <div className="mt-3 space-y-1.5">
+                <p>Runtime: <span className="text-white">{formatRuntimeLabel(asset.runtimeKey)}</span></p>
+                <p>JSON: <span className="text-white">{asset.detectedVersion}</span></p>
+                <p>Анимаций: <span className="text-white">{asset.animations.length}</span></p>
+                <p>Текстур: <span className="text-white">{asset.imageFiles.length}</span></p>
+              </div>
+            ) : (
+              <p className="mt-3 text-slate-400">Загрузите файлы, чтобы увидеть информацию.</p>
+            )}
+
+            {warnings.length > 0 && (
+              <div className="mt-3 border border-amber-400/30 bg-amber-400/10 p-2 text-amber-100">
+                {warnings.map((warning) => (
+                  <p key={warning}>{warning}</p>
+                ))}
+              </div>
+            )}
+
+            {errorMessage && <div className="mt-3 border border-rose-400/30 bg-rose-400/10 p-2 text-rose-100">{errorMessage}</div>}
+            {previewError && <div className="mt-3 border border-amber-400/30 bg-amber-400/10 p-2 text-amber-100">Ошибка превью: {previewError}</div>}
+          </section>
+        </aside>
+
+        <main className="flex min-h-[420px] flex-col border border-white/10 bg-slate-900 lg:min-h-0">
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 text-sm text-slate-300">
+            <span>{selectedAnimation ? `${selectedAnimation} · ${formatDuration(animationDuration)}` : "Превью"}</span>
+            <span>{formatDuration(currentTime)}</span>
+          </div>
+          <div className="h-[56vh] min-h-[420px] bg-[linear-gradient(45deg,rgba(255,255,255,0.04)_25%,transparent_25%,transparent_75%,rgba(255,255,255,0.04)_75%,rgba(255,255,255,0.04)),linear-gradient(45deg,rgba(255,255,255,0.04)_25%,transparent_25%,transparent_75%,rgba(255,255,255,0.04)_75%,rgba(255,255,255,0.04))] bg-[length:32px_32px] bg-[position:0_0,16px_16px] lg:h-full lg:min-h-0">
+            {asset ? (
+              <SpinePreview
+                asset={asset}
+                animationName={selectedAnimation}
+                isLooping={isLooping}
+                isPlaying={isPlaying && !isExporting}
+                playbackSpeed={playbackSpeed}
+                zoom={previewZoom}
+                restartToken={restartToken}
+                onTimeChange={setCurrentTime}
+                onPlaybackFinished={handlePreviewFinished}
+                onError={handlePreviewError}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center px-6 text-center text-sm text-slate-400">
+                Загрузите Spine файлы слева.
+              </div>
+            )}
+          </div>
+        </main>
+
+        <aside className="flex flex-col border border-white/10 bg-slate-900">
+          <section className="border-b border-white/10 px-4 py-4">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={!asset || !selectedAnimation || isExporting}
+                onClick={handlePlay}
+                className="border border-white/15 bg-white px-4 py-1.5 text-sm font-medium text-slate-950 disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-slate-500"
+              >
+                Play
+              </button>
+              <button
+                type="button"
+                disabled={!asset || !selectedAnimation || isExporting}
+                onClick={handleStop}
+                className="border border-white/15 px-4 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Stop
+              </button>
+              <label className="ml-1 flex items-center gap-2 text-sm text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={isLooping}
+                  disabled={!asset || isExporting}
+                  onChange={(event) => {
+                    setIsLooping(event.target.checked);
+                    setRestartToken((value) => value + 1);
+                    setCurrentTime(0);
+                  }}
+                  className="h-4 w-4"
                 />
-              ) : (
-                <div className="flex h-full items-center justify-center px-6 text-center text-sm leading-6 text-slate-400">
-                  Загрузите ваши Spine-файлы слева. После этого здесь появится большая область предпросмотра.
-                </div>
-              )}
+                Loop
+              </label>
             </div>
-          </main>
-        </div>
+          </section>
+
+          <section className="border-b border-white/10 px-4 py-4 text-sm">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-slate-300">
+                <span>Масштаб</span>
+                <span className="text-white">{formatZoomLabel(previewZoom)}</span>
+              </div>
+              <input
+                type="range"
+                min={0.2}
+                max={3}
+                step={0.05}
+                value={previewZoom}
+                disabled={!asset || isExporting}
+                onChange={(event) => setPreviewZoom(clampZoom(Number(event.target.value)))}
+                className="w-full accent-cyan-300"
+              />
+            </div>
+
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center justify-between text-slate-300">
+                <span>Скорость</span>
+                <span className="text-white">{formatSpeedLabel(playbackSpeed)}</span>
+              </div>
+              <input
+                type="range"
+                min={0.1}
+                max={3}
+                step={0.05}
+                value={playbackSpeed}
+                disabled={!asset || isExporting}
+                onChange={(event) => setPlaybackSpeed(clampSpeed(Number(event.target.value)))}
+                className="w-full accent-cyan-300"
+              />
+            </div>
+          </section>
+
+          <section className="border-b border-white/10 px-4 py-4 text-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-medium">Список анимаций</h2>
+              <span className="text-xs text-slate-500">{asset?.animations.length ?? 0}</span>
+            </div>
+            <div className="max-h-[210px] overflow-y-auto border border-white/10 bg-slate-950">
+              {asset?.animations.map((animation) => (
+                <button
+                  key={animation.name}
+                  type="button"
+                  onClick={() => {
+                    setSelectedAnimation(animation.name);
+                    setCurrentTime(0);
+                    setIsPlaying(true);
+                    setRestartToken((value) => value + 1);
+                  }}
+                  className={`block w-full border-b border-white/10 px-3 py-2 text-left text-sm last:border-b-0 ${
+                    selectedAnimation === animation.name ? "bg-cyan-300/10 text-white" : "text-slate-300 hover:bg-white/5"
+                  }`}
+                >
+                  {animation.name}
+                </button>
+              ))}
+              {!asset && <p className="px-3 py-3 text-slate-400">Сначала загрузите файлы.</p>}
+            </div>
+          </section>
+
+          <section className="px-4 py-4 text-sm">
+            <div className="flex items-center justify-between text-slate-300">
+              <span>FPS</span>
+              <input
+                type="number"
+                min={1}
+                max={60}
+                value={exportFps}
+                disabled={!asset || isExporting}
+                onChange={(event) => setExportFps(clampFps(Number(event.target.value)))}
+                className="w-20 border border-white/10 bg-slate-950 px-2 py-1 text-right text-white outline-none focus:border-cyan-300/50"
+              />
+            </div>
+
+            <button
+              type="button"
+              disabled={!asset || !selectedAnimation || isExporting}
+              onClick={() => void onExportFrames()}
+              className="mt-3 w-full border border-cyan-300/30 bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:bg-cyan-300/30 disabled:text-slate-600"
+            >
+              {isExporting ? `Экспорт ${progressPercent}%` : "Экспорт PNG sequence"}
+            </button>
+
+            <div className="mt-3 h-1.5 bg-white/10">
+              <div className="h-1.5 bg-cyan-300 transition-[width] duration-200" style={{ width: `${progressPercent}%` }} />
+            </div>
+          </section>
+        </aside>
       </div>
     </div>
   );
